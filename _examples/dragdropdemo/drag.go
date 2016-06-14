@@ -30,15 +30,15 @@ func CoordFollow(coords *pair.RxInt32PairSubscriber, l, r *int32) {
 }
 
 // EnableDragging runs dragging subprocesses for the given object when the boolean subscriber is true
-func EnableDragging(o drag.Draggable, mouse *gamekit.Mouse, rxdrag *drag.RxDraggable, clickBool *rx.BoolSubscriber) {
+func EnableDragging(o drag.Draggable, mouse *gamekit.Mouse, rxdrag *drag.RxDraggable, toDrag *rx.BoolSubscriber) {
 	go func() {
 
 		var mouseLocation *pair.RxInt32PairSubscriber
 
 		// wait for button click state changes
-		for buttonClick := range clickBool.C {
+		for dragOn := range toDrag.C {
 
-			if buttonClick {
+			if dragOn {
 
 				// if clicked, subscribe on the mouse cursor position and update the object
 				// when the mouse cursor moves
