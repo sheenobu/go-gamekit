@@ -44,7 +44,7 @@ func main() {
 		if i%2 != 0 {
 			item = NewItem(0, 0, 0, 0, win.Renderer)
 			go item.Run(ctx, win)
-			go EnableDragging(item, win.Mouse, dx, item.ClickState.Subscribe())
+			go EnableDragging(ctx, item, win.Mouse, dx, item.ClickState.Subscribe())
 			items = append(items, item)
 		}
 
@@ -53,8 +53,8 @@ func main() {
 
 		go dslot.Run(ctx, win)
 		go slot.Run(ctx, win)
-		go EnableDropping(dslot, win.Mouse, dx, true)
-		go EnableDropping(slot, win.Mouse, dx, false)
+		go EnableDropping(ctx, dslot, win.Mouse, dx, true)
+		go EnableDropping(ctx, slot, win.Mouse, dx, false)
 
 		dslots = append(dslots, dslot)
 		slots = append(slots, slot)

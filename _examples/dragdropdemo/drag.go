@@ -5,6 +5,7 @@ import (
 	"github.com/sheenobu/go-gamekit/drag"
 	"github.com/sheenobu/go-gamekit/pair"
 	"github.com/sheenobu/rxgen/rx"
+	"golang.org/x/net/context"
 )
 
 // Moveable is an interface for an entity which can be moved around the screen
@@ -14,114 +15,124 @@ type Moveable interface {
 	Move(x, y int32)
 }
 
-// ItemFollow moves the given Moveable everytime the subscribed coordinates change
-func ItemFollow(o Moveable, coords *pair.RxInt32PairSubscriber, offsetX, offsetY int32) {
-	for pos := range coords.C {
-		o.Move(pos.L-offsetX, pos.R-offsetY)
-	}
-}
-
-// CoordFollow updates the l and r pointers when the coordinates get updated
-func CoordFollow(coords *pair.RxInt32PairSubscriber, l, r *int32) {
-	for pos := range coords.C {
-		*l = pos.L
-		*r = pos.R
-	}
-}
-
 // EnableDragging runs dragging subprocesses for the given object when the boolean subscriber is true
-func EnableDragging(o drag.Draggable, mouse *gamekit.Mouse, rxdrag *drag.RxDraggable, toDrag *rx.BoolSubscriber) {
+func EnableDragging(ctx context.Context, o drag.Draggable, mouse *gamekit.Mouse, rxdrag *drag.RxDraggable, toDrag *rx.BoolSubscriber) {
 	go func() {
 
-		var mouseLocation *pair.RxInt32PairSubscriber
+		var mouseLocation <-chan pair.Int32Pair
+		var mouseLocationClose = func() {}
 
-		// wait for button click state changes
-		for dragOn := range toDrag.C {
+		var offsetX int32
+		var offsetY int32
 
-			if dragOn {
+		for {
+			select {
+			case <-ctx.Done():
+				mouseLocationClose()
+				return
+			case coords := <-mouseLocation:
+				// move the object when the mouse location comes in
+				o.Move(coords.L-offsetX, coords.R-offsetY)
+			case dragStatus := <-toDrag.C:
 
-				// if clicked, subscribe on the mouse cursor position and update the object
-				// when the mouse cursor moves
+				if dragStatus {
 
-				mouseLocation = mouse.Position.Subscribe()
-				ml := mouse.Position.Get()
+					// if clicked, subscribe on the mouse cursor position and update the object
+					// when the mouse cursor moves
 
-				curX, curY := o.Position()
+					// subscribe to the mouse location
+					s := mouse.Position.Subscribe()
+					mouseLocation = s.C
+					mouseLocationClose = s.Close
 
-				// offset ensures the relative location of the item compared to the mouse stays the mouse
-				offsetX := ml.L - curX
-				offsetY := ml.R - curY
+					// get the current position to calculate offset
+					// offset ensures the relative location of the item compared to the mouse stays the mouse
+					ml := mouse.Position.Get()
+					curX, curY := o.Position()
+					offsetX = ml.L - curX
+					offsetY = ml.R - curY
 
-				// signal that dragging has started
-				rxdrag.Set(o)
+					// signal that dragging has started
+					rxdrag.Set(o)
+				} else {
 
-				// Make the item follow the mouse location
-				go ItemFollow(o, mouseLocation, offsetX, offsetY)
+					// disable mouse location listener
+					mouseLocationClose()
+					mouseLocation = nil
+					mouseLocationClose = func() {}
 
-			} else if mouseLocation != nil {
-
-				// when the button is not clicked, close the mouseLocation subscription
-				mouseLocation.Close()
-				mouseLocation = nil
-
-				// signal that dragging has stopped
-				rxdrag.Set(nil)
+					// signal that dragging has stopped
+					rxdrag.Set(nil)
+				}
 			}
 		}
 	}()
 }
 
 // EnableDropping runs dropping subproceses for the given slot.
-func EnableDropping(s *Slot, mouse *gamekit.Mouse, rxdrag *drag.RxDraggable, isDestination bool) {
+func EnableDropping(ctx context.Context, s *Slot, mouse *gamekit.Mouse, rxdrag *drag.RxDraggable, isDestination bool) {
 	go func() {
 
 		sub := rxdrag.Subscribe()
+		defer sub.Close()
 
 		var curDragging drag.Draggable
-		var mouseLocation *pair.RxInt32PairSubscriber
+
+		var mouseLocation <-chan pair.Int32Pair
+		var mouseLocationClose = func() {}
 
 		var dragX, dragY int32
 
-		for o := range sub.C {
+		for {
+			select {
+			case <-ctx.Done():
+				mouseLocationClose()
+				return
+			case c := <-mouseLocation:
+				dragX = c.L
+				dragY = c.R
 
-			if o != nil {
-				// dragging has started, track the mouse for collision
-				mouseLocation = mouse.Position.Subscribe()
+			case o := <-sub.C:
 
-				// and save the current dragging object
-				curDragging = o
+				if o != nil {
+					// dragging has started, track the mouse for collision
+					s := mouse.Position.Subscribe()
+					mouseLocation = s.C
+					mouseLocationClose = s.Close
 
-				// make the dragX and dragY follow the mouse
-				go CoordFollow(mouseLocation, &dragX, &dragY)
+					// and save the current dragging object
+					curDragging = o
 
-				continue
-			}
+					continue
+				}
 
-			// dragging has stopped...
+				// dragging has stopped...
 
-			// stop tracking the mouse position
-			mouseLocation.Close()
-			mouseLocation = nil
+				// stop tracking the mouse position
+				mouseLocationClose()
+				mouseLocation = nil
+				mouseLocationClose = func() {}
 
-			// ensure our current draggable is compatible with our slot object
-			i, ok := curDragging.(*Item)
-			if !ok {
-				continue
-			}
+				// ensure our current draggable is compatible with our slot object
+				i, ok := curDragging.(*Item)
+				if !ok {
+					continue
+				}
 
-			// collision check
-			collision := dragX > s.X && dragY > s.Y && dragX < s.X+s.W && dragY < s.Y+s.H
+				// collision check
+				collision := dragX > s.X && dragY > s.Y && dragX < s.X+s.W && dragY < s.Y+s.H
 
-			// if we collided with an empty slot or our own slot, move the object to this new slot.
-			if isDestination && collision && s.Item == nil || s.Item == i {
-				i.Reparent(s)
-				continue
-			}
+				// if we collided with an empty slot or our own slot, move the object to this new slot.
+				if isDestination && collision && s.Item == nil || s.Item == i {
+					i.Reparent(s)
+					continue
+				}
 
-			// if we did not collide with any slot and the managed slot is our current slot, then reposition. This
-			// provides the 'snap-back' you see when dragging fails.
-			if s != nil && i != nil && i.Slot == s {
-				i.Reparent(s)
+				// if we did not collide with any slot and the managed slot is our current slot, then reposition. This
+				// provides the 'snap-back' you see when dragging fails.
+				if s != nil && i != nil && i.Slot == s {
+					i.Reparent(s)
+				}
 			}
 		}
 	}()
