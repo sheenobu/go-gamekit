@@ -6,7 +6,7 @@ The design of go-gamekit follows a reactive approach. Events are handled via
 channels that are wrapped as subscribable data types:
 
 In this example, `mouse.Position` has a Subscribe method that has a channel. This
-channel emits an Int32Pair, where we've decided that L is X and R is Y. Once the message comes in, we
+channel emits an `Int32Pair`, where we've decided that L is X and R is Y. Once the message comes in, we
 move the `MyObject` to follow:
 
 
