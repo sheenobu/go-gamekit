@@ -63,3 +63,7 @@ The following features are done or planned:
  * TODO: High level graphics API (maybe)
  * TODO: Networking
 
+## See Also
+
+ * [rxgen](https://github.com/sheenobu/rxgen)
+ * [go-sdl2](https://github.com/veandco/go-sdl2)
