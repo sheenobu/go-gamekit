@@ -5,7 +5,20 @@ go-gamekit is a simple game utility library built on top of SDL2.
 The design of go-gamekit follows a reactive approach. Events are handled via
 channels that are wrapped as subscribable data types:
 
-In this example, `mouse.Position` has a Subscribe method that has a channel. This
+```
+mouse.Position.Subscribe()                  // Mouse position changes
+button.Clicked.Subscribe()                  // UI button click changes (clicked/unclicked)
+window.Size.Subscribe()                     // Window Resizing
+windowManager.CurrentWindowID.Subscribe()   // Focused window changes
+```
+
+We can use `Get` to get the values synchronously:
+
+```
+windowID := windowManager.CurrentWindowID.Get()
+```
+
+In the example below, `mouse.Position` has a Subscribe method that has a channel. This
 channel emits an `Int32Pair`, where we've decided that L is X and R is Y. Once the message comes in, we
 move the `MyObject` to follow:
 
@@ -17,12 +30,12 @@ sub := mouse.Position.Subscribe()
 defer sub.Close()
 
 for {
-  select {
-    case coords := <-sub.C:
-      o.Move(coords.L, coords.R)
-    case <-ctx.Done():
-      return
-  }
+	select {
+		case coords := <-sub.C:
+			o.Move(coords.L, coords.R)
+		case <-ctx.Done():
+			return
+	}
 }
 ```
 
