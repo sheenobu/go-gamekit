@@ -43,21 +43,6 @@ func (rx *RxInt32Pair) Set(v Int32Pair) {
 	}
 }
 
-// Then decorates a reactive type and return the new decorated version
-func (rx *RxInt32Pair) Then(then func(Int32Pair) Int32Pair) *RxInt32Pair {
-	newRx := NewRxInt32Pair(then(rx.Get()))
-
-	s := rx.Subscribe()
-
-	go func() {
-		for v := range s.C {
-			newRx.Set(then(v))
-		}
-	}()
-
-	return newRx
-}
-
 // Subscribe subscribes to changes on the Int32Pair
 func (rx *RxInt32Pair) Subscribe() *RxInt32PairSubscriber {
 

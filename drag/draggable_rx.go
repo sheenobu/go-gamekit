@@ -43,21 +43,6 @@ func (rx *RxDraggable) Set(v Draggable) {
 	}
 }
 
-// Then decorates a reactive type and return the new decorated version
-func (rx *RxDraggable) Then(then func(Draggable) Draggable) *RxDraggable {
-	newRx := NewRxDraggable(then(rx.Get()))
-
-	s := rx.Subscribe()
-
-	go func() {
-		for v := range s.C {
-			newRx.Set(then(v))
-		}
-	}()
-
-	return newRx
-}
-
 // Subscribe subscribes to changes on the Draggable
 func (rx *RxDraggable) Subscribe() *RxDraggableSubscriber {
 
