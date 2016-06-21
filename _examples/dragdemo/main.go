@@ -2,6 +2,7 @@ package main
 
 import (
 	"runtime"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -40,6 +41,13 @@ func main() {
 	defer buttonPress.Close()
 	EnableDragging(ctx, b, win.Mouse, buttonPress)
 
+	// create a histogram for goroutine count
+	hs := gamekit.CountHistogram{}
+
+	go hs.Run(ctx, 300*time.Millisecond, func() int {
+		return runtime.NumGoroutine()
+	})
+
 	loop.Simple(wm, func() {
 
 		win.Renderer.SetDrawColor(0, 0, 0, 0)
@@ -47,6 +55,8 @@ func main() {
 
 		b.Render()
 		c.Render()
+
+		hs.Render(win.Renderer)
 
 		win.Renderer.Present()
 	}).Run()

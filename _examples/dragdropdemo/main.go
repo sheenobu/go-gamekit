@@ -2,6 +2,7 @@ package main
 
 import (
 	"runtime"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -60,6 +61,13 @@ func main() {
 		slots = append(slots, slot)
 	}
 
+	// create a histogram for goroutine count
+	hs := gamekit.CountHistogram{}
+
+	go hs.Run(ctx, 300*time.Millisecond, func() int {
+		return runtime.NumGoroutine()
+	})
+
 	// Run the gameloop
 
 	loop.Simple(wm, func() {
@@ -78,6 +86,8 @@ func main() {
 		for _, i := range items {
 			i.Render()
 		}
+
+		hs.Render(win.Renderer)
 
 		win.Renderer.Present()
 
