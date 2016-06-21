@@ -38,7 +38,7 @@ func main() {
 	// buttons X and Y, only if the button is pressed
 	buttonPress := b.ClickState.Subscribe()
 	defer buttonPress.Close()
-	EnableDragging(b, win.Mouse, buttonPress)
+	EnableDragging(ctx, b, win.Mouse, buttonPress)
 
 	loop.Simple(wm, func() {
 
