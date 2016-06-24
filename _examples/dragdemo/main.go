@@ -49,8 +49,7 @@ func main() {
 	})
 
 	loop.Simple(wm, func() {
-
-		win.Renderer.SetDrawColor(0, 0, 0, 0)
+		win.Renderer.SetDrawColor(128, 128, 128, 0)
 		win.Renderer.Clear()
 
 		b.Render()

@@ -22,6 +22,7 @@ func main() {
 
 	// build and run the simple game loop
 	loop.Simple(wm, func() {
+		win.Renderer.SetDrawColor(128, 128, 128, 255)
 		win.Renderer.Clear()
 
 		win.Renderer.Present()
