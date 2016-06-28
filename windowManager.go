@@ -31,7 +31,7 @@ func NewWindowManager() *WindowManager {
 }
 
 // NewWindow creates a new window, returning the window
-func (wm *WindowManager) NewWindow(title string, w int, h int) (*Window, error) {
+func (wm *WindowManager) NewWindow(title string, w int, h int, extraFlags int) (*Window, error) {
 
 	wm.lock.Lock()
 	defer wm.lock.Unlock()
@@ -44,7 +44,7 @@ func (wm *WindowManager) NewWindow(title string, w int, h int) (*Window, error) 
 
 	win := &Window{
 		ID:       window.GetID(),
-		Size:     pair.NewRxInt32Pair(pair.Int32Pair{int32(w), int32(h)}),
+		Size:     pair.NewRxInt32Pair(pair.Int32Pair{L: int32(w), R: int32(h)}),
 		Window:   window,
 		Renderer: renderer,
 		Mouse:    NewMouse(),
@@ -99,7 +99,7 @@ func (wm *WindowManager) DispatchEvents() {
 				// wm.windows[t.WindowID].Size.Set(pair.Int32Pair{t.Data1, t.Data2})
 				return
 			case sdl.WINDOWEVENT_SIZE_CHANGED:
-				wm.windows[t.WindowID].Size.Set(pair.Int32Pair{t.Data1, t.Data2})
+				wm.windows[t.WindowID].Size.Set(pair.Int32Pair{L: t.Data1, R: t.Data2})
 				return
 			case sdl.WINDOWEVENT_FOCUS_GAINED:
 				wm.CurrentWindowID.Set(t.WindowID)
@@ -114,14 +114,15 @@ func (wm *WindowManager) DispatchEvents() {
 			}
 
 		case *sdl.MouseMotionEvent:
-			wm.windows[t.WindowID].Mouse.Position.Set(pair.Int32Pair{t.X, t.Y})
+			wm.windows[t.WindowID].Mouse.Position.Set(pair.Int32Pair{L: t.X, R: t.Y})
 		case *sdl.MouseButtonEvent:
+
 			mouse := wm.windows[t.WindowID].Mouse
 			switch t.Button {
 			case sdl.BUTTON_LEFT:
 				go mouse.LeftButtonState.Set(t.State == sdl.PRESSED)
 			case sdl.BUTTON_RIGHT:
-				mouse.RightButtonState.Set(t.State == sdl.PRESSED)
+				go mouse.RightButtonState.Set(t.State == sdl.PRESSED)
 			}
 		case *sdl.QuitEvent:
 			return
