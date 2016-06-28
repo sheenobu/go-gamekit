@@ -19,7 +19,7 @@ func main() {
 
 	// create our window
 	wm := gamekit.NewWindowManager()
-	win, err := wm.NewWindow("dragdropdemo", 800, 600)
+	win, err := wm.NewWindow("dragdropdemo", 800, 600, 0)
 	if err != nil {
 		panic(err)
 	}

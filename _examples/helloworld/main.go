@@ -15,7 +15,7 @@ func main() {
 
 	// build the main window
 	wm := gamekit.NewWindowManager()
-	win, err := wm.NewWindow("hello-world", 800, 600)
+	win, err := wm.NewWindow("hello-world", 800, 600, 0)
 	if err != nil {
 		panic(err)
 	}
