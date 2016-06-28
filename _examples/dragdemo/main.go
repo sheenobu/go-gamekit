@@ -48,7 +48,7 @@ func main() {
 		return runtime.NumGoroutine()
 	})
 
-	loop.Simple(wm, func() {
+	loop.Simple(wm, ctx, func() {
 		win.Renderer.SetDrawColor(128, 128, 128, 0)
 		win.Renderer.Clear()
 
