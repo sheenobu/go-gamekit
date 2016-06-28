@@ -39,5 +39,8 @@ func (sl *simpleLoop) Run() {
 	for sl.running {
 		sl.wm.DispatchEvents()
 		sl.render()
+
+		sdl.Delay(2)
+
 	}
 }
