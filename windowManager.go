@@ -91,6 +91,11 @@ func (wm *WindowManager) DispatchEvents() {
 		wm.lock.RLock()
 		defer wm.lock.RUnlock()
 
+		cwd := wm.CurrentWindowID.Get()
+		if cwd == 0 {
+			return
+		}
+
 		switch t := e.(type) {
 		case *sdl.WindowEvent:
 			switch t.Event {
@@ -125,11 +130,6 @@ func (wm *WindowManager) DispatchEvents() {
 				go mouse.RightButtonState.Set(t.State == sdl.PRESSED)
 			}
 		case *sdl.QuitEvent:
-			return
-		}
-
-		cwd := wm.CurrentWindowID.Get()
-		if cwd == 0 {
 			return
 		}
 
