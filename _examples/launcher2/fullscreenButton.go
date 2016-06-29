@@ -7,10 +7,7 @@ import (
 )
 
 type fullscreenButton struct {
-	X int32
-	Y int32
-	W int32
-	H int32
+	button *button
 
 	checkbox *sdl.Texture
 	self     <-chan bool
@@ -18,30 +15,30 @@ type fullscreenButton struct {
 	selected bool
 }
 
-func (fb *fullscreenButton) Run(ctx context.Context, m *gamekit.Mouse) {
-	posS := m.Position.Subscribe()
-	clickS := m.LeftButtonState.Subscribe()
-	defer posS.Close()
-	defer clickS.Close()
+func newFullscreenButton(r *sdl.Rect, t *sdl.Texture) *fullscreenButton {
+	return &fullscreenButton{
+		button:   newButton(r, nil),
+		checkbox: t,
+	}
+}
 
-	hovering := false
+func (fb *fullscreenButton) Run(ctx context.Context, m *gamekit.Mouse) {
+	clickSub := fb.button.Clicked.Subscribe()
+	defer clickSub.Close()
+
+	go fb.button.Run(ctx, m)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case pos := <-posS.C:
-			x := pos.L
-			y := pos.R
-			hovering = x > fb.X && y > fb.Y && x < fb.X+fb.W && y < fb.Y+fb.H
 		case s, more := <-fb.self:
 			if !more {
 				return
 			}
 			fb.selected = s
-		case leftClick := <-clickS.C:
-			if hovering && leftClick {
-
+		case clicked := <-clickSub.C:
+			if clicked {
 				// mark self as selected
 				fb.selected = true
 
@@ -56,10 +53,12 @@ func (fb *fullscreenButton) Run(ctx context.Context, m *gamekit.Mouse) {
 
 func (fb *fullscreenButton) Render(r *sdl.Renderer) {
 
+	fb.button.Render(r)
+
 	if fb.selected {
+		p := fb.button
 		r.Copy(fb.checkbox, nil, &sdl.Rect{
-			X: 107*2 + fb.X, Y: 9*2 + fb.Y, W: 9 * 2, H: 9 * 2,
+			X: 107*2 + p.X, Y: 9*2 + p.Y, W: 9 * 2, H: 9 * 2,
 		})
 	}
-
 }
