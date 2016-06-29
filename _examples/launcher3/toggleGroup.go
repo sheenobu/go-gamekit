@@ -8,15 +8,15 @@ import (
 
 // multiple buttons that are related by state
 type toggleGroup struct {
-	wb *windowedButton
-	fb *fullscreenButton
+	wb *toggleButton
+	fb *toggleButton
 }
 
 func newToggleGroup(sheet *sheet, windowedButtonID int, fullscreenButtonID int, checkboxID int) *toggleGroup {
 
 	var tg toggleGroup
-	tg.wb = newWindowedButton(&sdl.Rect{X: 3 * 2, Y: 3 * 2, W: 123 * 2, H: 27 * 2}, sheet, windowedButtonID, checkboxID)
-	tg.fb = newFullscreenButton(&sdl.Rect{X: 3 * 2, Y: 35 * 2, W: 123 * 2, H: 27 * 2}, sheet, fullscreenButtonID, checkboxID)
+	tg.wb = newToggleButton(&sdl.Rect{X: 3 * 2, Y: 3 * 2, W: 123 * 2, H: 27 * 2}, &sdl.Rect{X: 107 * 2, Y: 9 * 2, W: 9 * 2, H: 9 * 2}, sheet, windowedButtonID, checkboxID)
+	tg.fb = newToggleButton(&sdl.Rect{X: 3 * 2, Y: 35 * 2, W: 123 * 2, H: 27 * 2}, &sdl.Rect{X: 107 * 2, Y: 9 * 2, W: 9 * 2, H: 9 * 2}, sheet, fullscreenButtonID, checkboxID)
 
 	return &tg
 }
