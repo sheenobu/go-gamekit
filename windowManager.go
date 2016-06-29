@@ -91,20 +91,20 @@ func (wm *WindowManager) DispatchEvents() {
 		wm.lock.RLock()
 		defer wm.lock.RUnlock()
 
-		cwd := wm.CurrentWindowID.Get()
-		if cwd == 0 {
-			return
-		}
-
 		switch t := e.(type) {
 		case *sdl.WindowEvent:
+
+			win := wm.windows[t.WindowID]
+
 			switch t.Event {
 			case sdl.WINDOWEVENT_RESIZED:
 				// if we handle these events we actually get a crash????
 				// wm.windows[t.WindowID].Size.Set(pair.Int32Pair{t.Data1, t.Data2})
 				return
 			case sdl.WINDOWEVENT_SIZE_CHANGED:
-				wm.windows[t.WindowID].Size.Set(pair.Int32Pair{L: t.Data1, R: t.Data2})
+				if win != nil {
+					win.Size.Set(pair.Int32Pair{L: t.Data1, R: t.Data2})
+				}
 				return
 			case sdl.WINDOWEVENT_FOCUS_GAINED:
 				wm.CurrentWindowID.Set(t.WindowID)
@@ -119,17 +119,28 @@ func (wm *WindowManager) DispatchEvents() {
 			}
 
 		case *sdl.MouseMotionEvent:
-			wm.windows[t.WindowID].Mouse.Position.Set(pair.Int32Pair{L: t.X, R: t.Y})
+			win := wm.windows[t.WindowID]
+			if win != nil {
+				win.Mouse.Position.Set(pair.Int32Pair{L: t.X, R: t.Y})
+			}
 		case *sdl.MouseButtonEvent:
+			win := wm.windows[t.WindowID]
 
-			mouse := wm.windows[t.WindowID].Mouse
-			switch t.Button {
-			case sdl.BUTTON_LEFT:
-				go mouse.LeftButtonState.Set(t.State == sdl.PRESSED)
-			case sdl.BUTTON_RIGHT:
-				go mouse.RightButtonState.Set(t.State == sdl.PRESSED)
+			if win != nil {
+				mouse := win.Mouse
+				switch t.Button {
+				case sdl.BUTTON_LEFT:
+					go mouse.LeftButtonState.Set(t.State == sdl.PRESSED)
+				case sdl.BUTTON_RIGHT:
+					go mouse.RightButtonState.Set(t.State == sdl.PRESSED)
+				}
 			}
 		case *sdl.QuitEvent:
+			return
+		}
+
+		cwd := wm.CurrentWindowID.Get()
+		if cwd == 0 {
 			return
 		}
 
