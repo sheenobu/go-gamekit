@@ -9,13 +9,14 @@ import (
 
 func newButton(r *sdl.Rect, t *sdl.Texture) *button {
 	return &button{
-		X:            r.X,
-		Y:            r.Y,
-		W:            r.W,
-		H:            r.H,
-		T:            t,
-		Clicked:      rx.NewBool(false),
-		clickedState: false,
+		X:             r.X,
+		Y:             r.Y,
+		W:             r.W,
+		H:             r.H,
+		T:             t,
+		Clicked:       rx.NewBool(false),
+		clickedState:  false,
+		hoveringState: false,
 	}
 }
 
@@ -27,8 +28,10 @@ type button struct {
 
 	T *sdl.Texture
 
-	Clicked      *rx.Bool
-	clickedState bool
+	Clicked *rx.Bool
+
+	clickedState  bool
+	hoveringState bool
 }
 
 func (b *button) Run(ctx context.Context, m *gamekit.Mouse) {
@@ -38,8 +41,6 @@ func (b *button) Run(ctx context.Context, m *gamekit.Mouse) {
 	defer posS.Close()
 	defer clickS.Close()
 
-	hovering := false
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -47,9 +48,9 @@ func (b *button) Run(ctx context.Context, m *gamekit.Mouse) {
 		case pos := <-posS.C:
 			x := pos.L
 			y := pos.R
-			hovering = x > b.X && y > b.Y && x < b.X+b.W && y < b.Y+b.H
+			b.hoveringState = x > b.X && y > b.Y && x < b.X+b.W && y < b.Y+b.H
 		case leftClick := <-clickS.C:
-			if hovering && leftClick {
+			if b.hoveringState && leftClick {
 				b.clickedState = true
 				b.Clicked.Set(true)
 			} else {
