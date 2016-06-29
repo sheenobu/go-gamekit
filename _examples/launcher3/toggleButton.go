@@ -2,29 +2,33 @@ package main
 
 import (
 	"github.com/sheenobu/go-gamekit"
+	"github.com/sheenobu/rxgen/rx"
 	"github.com/veandco/go-sdl2/sdl"
 	"golang.org/x/net/context"
 )
 
 type toggleButton struct {
+	name     string
 	button   *button
 	checkbox *sprite
 
-	self     <-chan bool
-	others   []chan<- bool
-	selected bool
+	isSelected bool
 }
 
-func newToggleButton(r *sdl.Rect, checkboxOffset *sdl.Rect, sheet *sheet, textureID int, checkboxID int) *toggleButton {
+func newToggleButton(name string, r *sdl.Rect, checkboxOffset *sdl.Rect, sheet *sheet, textureID int, checkboxID int) *toggleButton {
 	return &toggleButton{
+		name:     name,
 		button:   newButton(r, sheet, textureID),
 		checkbox: newSprite(sdl.Rect{X: checkboxOffset.X + r.X, Y: checkboxOffset.Y + r.Y, W: checkboxOffset.W, H: checkboxOffset.H}, sheet, checkboxID),
 	}
 }
 
-func (tb *toggleButton) Run(ctx context.Context, m *gamekit.Mouse) {
+func (tb *toggleButton) Run(ctx context.Context, m *gamekit.Mouse, selected *rx.String) {
 	clickSub := tb.button.Clicked.Subscribe()
 	defer clickSub.Close()
+
+	selectedSub := selected.Subscribe()
+	defer selectedSub.Close()
 
 	go tb.button.Run(ctx, m)
 
@@ -32,20 +36,11 @@ func (tb *toggleButton) Run(ctx context.Context, m *gamekit.Mouse) {
 		select {
 		case <-ctx.Done():
 			return
-		case s, more := <-tb.self:
-			if !more {
-				return
-			}
-			tb.selected = s
+		case name := <-selectedSub.C:
+			tb.isSelected = name == tb.name
 		case clicked := <-clickSub.C:
 			if clicked {
-				// mark self as selected
-				tb.selected = true
-
-				// mark all others in group as unselected
-				for _, o := range tb.others {
-					o <- false
-				}
+				go selected.Set(tb.name)
 			}
 		}
 	}
@@ -55,7 +50,7 @@ func (tb *toggleButton) Render(r *sdl.Renderer) {
 
 	tb.button.Render(r)
 
-	if tb.selected {
+	if tb.isSelected {
 		tb.checkbox.Render(r)
 	}
 }

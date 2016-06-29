@@ -61,12 +61,17 @@ func runLauncher() (res launchResults) {
 		closeSub := cb.Clicked.Subscribe()
 		defer closeSub.Close()
 
+		selectedSub := tg.Selected.Subscribe()
+		defer selectedSub.Close()
+
 		defer cancel()
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
+			case name := <-selectedSub.C:
+				res.Fullscreen = name == "fullscreen"
 			case clicked := <-closeSub.C:
 				if clicked {
 					return
@@ -92,8 +97,6 @@ func runLauncher() (res launchResults) {
 
 		win.Renderer.Present()
 	}).Run()
-
-	res.Fullscreen = tg.IsFullscreen()
 
 	return
 }
