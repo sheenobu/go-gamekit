@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/sheenobu/go-gamekit"
+	"github.com/veandco/go-sdl2/sdl"
 	"golang.org/x/net/context"
 )
 
@@ -10,6 +11,8 @@ type button struct {
 	Y int32
 	W int32
 	H int32
+
+	T *sdl.Texture
 
 	Click func()
 }
@@ -36,4 +39,12 @@ func (b *button) Run(ctx context.Context, m *gamekit.Mouse) {
 			}
 		}
 	}
+}
+
+func (b *button) Render(r *sdl.Renderer) {
+	if b.T == nil {
+		return
+	}
+
+	r.Copy(b.T, nil, &sdl.Rect{X: b.X, Y: b.Y, W: b.W, H: b.H})
 }

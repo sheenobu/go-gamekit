@@ -54,10 +54,10 @@ func runLauncher() (res launchResults) {
 	}
 
 	// run the interactive elements
-	cb := &button{133 * 2, 49 * 2, 53 * 2, 13 * 2, cancel}
+	cb := &button{133 * 2, 49 * 2, 53 * 2, 13 * 2, nil, cancel}
 	go cb.Run(ctx, win.Mouse)
 
-	lb := &button{192 * 2, 49 * 2, 53 * 2, 13 * 2, launchOn}
+	lb := &button{192 * 2, 49 * 2, 53 * 2, 13 * 2, nil, launchOn}
 	go lb.Run(ctx, win.Mouse)
 
 	tg := &toggleGroup{}
@@ -73,6 +73,8 @@ func runLauncher() (res launchResults) {
 
 		win.Renderer.Copy(launchTexture, nil, &sdl.Rect{X: 0, Y: 0, W: int32(winW), H: int32(winH)})
 
+		cb.Render(win.Renderer)
+		lb.Render(win.Renderer)
 		tg.Render(win.Renderer)
 		rp.Render(win.Renderer)
 
