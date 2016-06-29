@@ -5,6 +5,7 @@ import (
 
 	"github.com/sheenobu/go-gamekit"
 	"github.com/sheenobu/go-gamekit/gfx2"
+	"github.com/sheenobu/go-gamekit/ui"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/sdl_ttf"
 	"golang.org/x/net/context"
@@ -16,8 +17,8 @@ type resolutionPicker struct {
 	resolutions []sdl.DisplayMode
 
 	scrollRegion    *gfx2.Sprite
-	arrowUpButton   *button
-	arrowDownButton *button
+	arrowUpButton   *ui.Button
+	arrowDownButton *ui.Button
 
 	scrollPosition int32
 	scrollMax      int32
@@ -133,8 +134,8 @@ func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer, sheet *gfx2.Sheet, sc
 	rs.selected = 3
 
 	// create the scroll buttons
-	rs.arrowUpButton = newButton(&sdl.Rect{X: 235 * 2, Y: 4 * 2, W: 9 * 2, H: 7 * 2}, sheet, arrowUpID)
-	rs.arrowDownButton = newButton(&sdl.Rect{X: 235 * 2, Y: 38 * 2, W: 9 * 2, H: 7 * 2}, sheet, arrowDownID)
+	rs.arrowUpButton = ui.NewButton(&sdl.Rect{X: 235 * 2, Y: 4 * 2, W: 9 * 2, H: 7 * 2}, sheet, arrowUpID)
+	rs.arrowDownButton = ui.NewButton(&sdl.Rect{X: 235 * 2, Y: 38 * 2, W: 9 * 2, H: 7 * 2}, sheet, arrowDownID)
 
 	return rs
 }

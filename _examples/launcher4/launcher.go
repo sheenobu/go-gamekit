@@ -4,6 +4,7 @@ import (
 	"github.com/sheenobu/go-gamekit"
 	"github.com/sheenobu/go-gamekit/gfx2"
 	"github.com/sheenobu/go-gamekit/loop"
+	"github.com/sheenobu/go-gamekit/ui"
 	"github.com/veandco/go-sdl2/sdl"
 	"golang.org/x/net/context"
 )
@@ -42,15 +43,15 @@ func runLauncher() (res launchResults) {
 	arrowDownID := launcherSheet.Add(&sdl.Rect{X: 247, Y: 18, W: 9, H: 7})
 
 	// run the interactive elements
-	cb := newButton(&sdl.Rect{X: 133 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, launcherSheet, closeButtonID)
+	cb := ui.NewButton(&sdl.Rect{X: 133 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, launcherSheet, closeButtonID)
 	go cb.Run(ctx, win.Mouse)
 
-	lb := newButton(&sdl.Rect{X: 192 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, launcherSheet, launchButtonID)
+	lb := ui.NewButton(&sdl.Rect{X: 192 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, launcherSheet, launchButtonID)
 	go lb.Run(ctx, win.Mouse)
 
-	tg := newToggleGroup("windowed")
-	tg.Add(newToggleButton("windowed", &sdl.Rect{X: 3 * 2, Y: 3 * 2, W: 123 * 2, H: 27 * 2}, &sdl.Rect{X: 107 * 2, Y: 9 * 2, W: 9 * 2, H: 9 * 2}, launcherSheet, windowedButtonID, checkboxID))
-	tg.Add(newToggleButton("fullscreen", &sdl.Rect{X: 3 * 2, Y: 35 * 2, W: 123 * 2, H: 27 * 2}, &sdl.Rect{X: 107 * 2, Y: 9 * 2, W: 9 * 2, H: 9 * 2}, launcherSheet, fullscreenButtonID, checkboxID))
+	tg := ui.NewToggleGroup("windowed")
+	tg.Add(ui.NewToggleButton("windowed", &sdl.Rect{X: 3 * 2, Y: 3 * 2, W: 123 * 2, H: 27 * 2}, &sdl.Rect{X: 107 * 2, Y: 9 * 2, W: 9 * 2, H: 9 * 2}, launcherSheet, windowedButtonID, checkboxID))
+	tg.Add(ui.NewToggleButton("fullscreen", &sdl.Rect{X: 3 * 2, Y: 35 * 2, W: 123 * 2, H: 27 * 2}, &sdl.Rect{X: 107 * 2, Y: 9 * 2, W: 9 * 2, H: 9 * 2}, launcherSheet, fullscreenButtonID, checkboxID))
 	go tg.Run(ctx, win.Mouse)
 
 	rp := newResolutionPicker(sdl.Rect{X: 133 * 2, Y: 3 * 2, W: 100 * 2, H: 41 * 2}, win.Renderer, launcherSheet, scrollRegionID, arrowUpID, arrowDownID)
