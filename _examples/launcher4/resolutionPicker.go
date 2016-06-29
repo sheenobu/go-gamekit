@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sheenobu/go-gamekit"
+	"github.com/sheenobu/go-gamekit/gfx2"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/sdl_ttf"
 	"golang.org/x/net/context"
@@ -14,7 +15,7 @@ type resolutionPicker struct {
 	bounds      sdl.Rect
 	resolutions []sdl.DisplayMode
 
-	scrollRegion    *sprite
+	scrollRegion    *gfx2.Sprite
 	arrowUpButton   *button
 	arrowDownButton *button
 
@@ -27,12 +28,12 @@ type resolutionPicker struct {
 	selected int32
 }
 
-func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer, sheet *sheet, scrollID int, arrowUpID int, arrowDownID int) *resolutionPicker {
+func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer, sheet *gfx2.Sheet, scrollID int, arrowUpID int, arrowDownID int) *resolutionPicker {
 
 	rs := &resolutionPicker{}
 	rs.bounds = bounds
 
-	rs.scrollRegion = newSprite(bounds, sheet, scrollID)
+	rs.scrollRegion = gfx2.NewSprite(bounds, sheet, scrollID, 2)
 
 	// load font
 	f, err := ttf.OpenFont("./data/font.ttf", 15)

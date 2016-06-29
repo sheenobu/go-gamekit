@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/sheenobu/go-gamekit"
+	"github.com/sheenobu/go-gamekit/gfx2"
 	"github.com/sheenobu/rxgen/rx"
 	"github.com/veandco/go-sdl2/sdl"
 	"golang.org/x/net/context"
@@ -10,16 +11,16 @@ import (
 type toggleButton struct {
 	name     string
 	button   *button
-	checkbox *sprite
+	checkbox *gfx2.Sprite
 
 	isSelected bool
 }
 
-func newToggleButton(name string, r *sdl.Rect, checkboxOffset *sdl.Rect, sheet *sheet, textureID int, checkboxID int) *toggleButton {
+func newToggleButton(name string, r *sdl.Rect, checkboxOffset *sdl.Rect, sheet *gfx2.Sheet, textureID int, checkboxID int) *toggleButton {
 	return &toggleButton{
 		name:     name,
 		button:   newButton(r, sheet, textureID),
-		checkbox: newSprite(sdl.Rect{X: checkboxOffset.X + r.X, Y: checkboxOffset.Y + r.Y, W: checkboxOffset.W, H: checkboxOffset.H}, sheet, checkboxID),
+		checkbox: gfx2.NewSprite(sdl.Rect{X: checkboxOffset.X + r.X, Y: checkboxOffset.Y + r.Y, W: checkboxOffset.W, H: checkboxOffset.H}, sheet, checkboxID, 2),
 	}
 }
 

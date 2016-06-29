@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/sheenobu/go-gamekit"
+	"github.com/sheenobu/go-gamekit/gfx2"
 	"github.com/sheenobu/go-gamekit/loop"
 	"github.com/veandco/go-sdl2/sdl"
 	"golang.org/x/net/context"
@@ -29,7 +30,7 @@ func runLauncher() (res launchResults) {
 	}
 
 	// load the sprite sheet
-	launcherSheet := newSheet(win.Renderer, "./data/launcher_sheet.png")
+	launcherSheet := gfx2.NewSheet(win.Renderer, "./data/launcher_sheet.png")
 
 	windowedButtonID := launcherSheet.Add(&sdl.Rect{X: 0, Y: 3, W: 123, H: 27})
 	fullscreenButtonID := launcherSheet.Add(&sdl.Rect{X: 0, Y: 35, W: 123, H: 27})
