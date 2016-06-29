@@ -15,6 +15,9 @@ type resolutionPicker struct {
 	bounds      sdl.Rect
 	resolutions []sdl.DisplayMode
 
+	arrowUpButton   *button
+	arrowDownButton *button
+
 	arrowUp   *sdl.Texture
 	arrowDown *sdl.Texture
 
@@ -141,45 +144,36 @@ func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer) *resolutionPicker {
 
 	rs.selected = 3
 
+	// create the scroll buttons
+	rs.arrowUpButton = &button{235 * 2, 4 * 2, 9 * 2, 7 * 2, rs.arrowUp, func() {
+		if rs.scrollPosition > 0 {
+			rs.scrollPosition--
+		}
+	}}
+
+	rs.arrowDownButton = &button{235 * 2, 38 * 2, 9 * 2, 7 * 2, rs.arrowDown, func() {
+		if rs.scrollPosition < rs.scrollMax {
+			rs.scrollPosition++
+		}
+	}}
+
 	return rs
 }
 
 func (rs *resolutionPicker) Run(ctx context.Context, m *gamekit.Mouse, res *launchResults) {
 
-	posS := m.Position.Subscribe()
-	defer posS.Close()
-
-	leftClickS := m.LeftButtonState.Subscribe()
-	defer leftClickS.Close()
-
-	rightClickS := m.RightButtonState.Subscribe()
-	defer rightClickS.Close()
-
-	var arrowUpHovered bool
-	var arrowDownHovered bool
-
 	// set the selected display
 	res.ChosenResolution = rs.resolutions[rs.selected]
 
+	// run the button processes
+	go rs.arrowUpButton.Run(ctx, m)
+	go rs.arrowDownButton.Run(ctx, m)
+
+	// just wait for hangup
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case pos := <-posS.C:
-			arrowUpHovered = pos.L >= 235*2 && pos.L <= 235*2+9*2 && pos.R >= 4*2 && pos.R <= 4*2+7*2
-			arrowDownHovered = pos.L >= 235*2 && pos.L <= 235*2+9*2 && pos.R >= 38*2 && pos.R <= 38*2+7*2
-		case on := <-leftClickS.C:
-			if on {
-				if arrowUpHovered {
-					if rs.scrollPosition > 0 {
-						rs.scrollPosition--
-					}
-				} else if arrowDownHovered {
-					if rs.scrollPosition < rs.scrollMax {
-						rs.scrollPosition++
-					}
-				}
-			}
 		}
 	}
 }
@@ -187,8 +181,8 @@ func (rs *resolutionPicker) Run(ctx context.Context, m *gamekit.Mouse, res *laun
 func (rs *resolutionPicker) Render(r *sdl.Renderer) {
 	r.Copy(rs.offscreenTexture, &sdl.Rect{X: 0, Y: rs.scrollPosition * 20, W: rs.bounds.W, H: rs.bounds.H}, &rs.bounds)
 
-	r.Copy(rs.arrowUp, nil, &sdl.Rect{X: 235 * 2, Y: 4 * 2, W: 9 * 2, H: 7 * 2})
-	r.Copy(rs.arrowDown, nil, &sdl.Rect{X: 235 * 2, Y: 38 * 2, W: 9 * 2, H: 7 * 2})
+	rs.arrowUpButton.Render(r)
+	rs.arrowDownButton.Render(r)
 
 	if rs.selected >= rs.scrollPosition {
 		r.SetDrawColor(255, 255, 255, 255)
@@ -199,5 +193,4 @@ func (rs *resolutionPicker) Render(r *sdl.Renderer) {
 
 	r.SetDrawColor(255, 255, 255, 255)
 	r.FillRect(&sdl.Rect{X: 236 * 2, Y: 11*2 + int32(((2*27)-(9*2))*scrollPos), W: 7 * 2, H: 9 * 2})
-
 }
