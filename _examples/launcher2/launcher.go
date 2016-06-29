@@ -41,12 +41,6 @@ func runLauncher() (res launchResults) {
 		panic(err)
 	}
 
-	res.Launch = false
-	launchOn := func() {
-		res.Launch = true
-		cancel()
-	}
-
 	// load the checkobx texture
 	checkbox, err := img.LoadTexture(win.Renderer, "./data/checkbox.png")
 	if err != nil {
@@ -54,10 +48,10 @@ func runLauncher() (res launchResults) {
 	}
 
 	// run the interactive elements
-	cb := &button{133 * 2, 49 * 2, 53 * 2, 13 * 2, nil, cancel}
+	cb := newButton(&sdl.Rect{X: 133 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, nil)
 	go cb.Run(ctx, win.Mouse)
 
-	lb := &button{192 * 2, 49 * 2, 53 * 2, 13 * 2, nil, launchOn}
+	lb := newButton(&sdl.Rect{X: 192 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, nil)
 	go lb.Run(ctx, win.Mouse)
 
 	tg := &toggleGroup{}
@@ -65,6 +59,33 @@ func runLauncher() (res launchResults) {
 
 	rp := newResolutionPicker(sdl.Rect{X: 134 * 2, Y: 4 * 2, W: 100 * 2, H: 41 * 2}, win.Renderer)
 	go rp.Run(ctx, win.Mouse, &res)
+
+	go func() {
+
+		launchSub := lb.Clicked.Subscribe()
+		defer launchSub.Close()
+
+		closeSub := cb.Clicked.Subscribe()
+		defer closeSub.Close()
+
+		defer cancel()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case clicked := <-closeSub.C:
+				if clicked {
+					return
+				}
+			case clicked := <-launchSub.C:
+				if clicked {
+					res.Launch = true
+					return
+				}
+			}
+		}
+	}()
 
 	// build and run the simple game loop
 	loop.Simple(wm, ctx, func() {

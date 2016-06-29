@@ -145,17 +145,8 @@ func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer) *resolutionPicker {
 	rs.selected = 3
 
 	// create the scroll buttons
-	rs.arrowUpButton = &button{235 * 2, 4 * 2, 9 * 2, 7 * 2, rs.arrowUp, func() {
-		if rs.scrollPosition > 0 {
-			rs.scrollPosition--
-		}
-	}}
-
-	rs.arrowDownButton = &button{235 * 2, 38 * 2, 9 * 2, 7 * 2, rs.arrowDown, func() {
-		if rs.scrollPosition < rs.scrollMax {
-			rs.scrollPosition++
-		}
-	}}
+	rs.arrowUpButton = newButton(&sdl.Rect{X: 235 * 2, Y: 4 * 2, W: 9 * 2, H: 7 * 2}, rs.arrowUp)
+	rs.arrowDownButton = newButton(&sdl.Rect{X: 235 * 2, Y: 38 * 2, W: 9 * 2, H: 7 * 2}, rs.arrowDown)
 
 	return rs
 }
@@ -169,9 +160,22 @@ func (rs *resolutionPicker) Run(ctx context.Context, m *gamekit.Mouse, res *laun
 	go rs.arrowUpButton.Run(ctx, m)
 	go rs.arrowDownButton.Run(ctx, m)
 
-	// just wait for hangup
+	arrowUpSub := rs.arrowUpButton.Clicked.Subscribe()
+	defer arrowUpSub.Close()
+
+	arrowDownSub := rs.arrowDownButton.Clicked.Subscribe()
+	defer arrowDownSub.Close()
+
 	for {
 		select {
+		case clicked := <-arrowUpSub.C:
+			if clicked && rs.scrollPosition > 0 {
+				rs.scrollPosition--
+			}
+		case clicked := <-arrowDownSub.C:
+			if clicked && rs.scrollPosition < rs.scrollMax {
+				rs.scrollPosition++
+			}
 		case <-ctx.Done():
 			return
 		}
