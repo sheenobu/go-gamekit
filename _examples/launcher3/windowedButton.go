@@ -7,10 +7,7 @@ import (
 )
 
 type windowedButton struct {
-	X int32
-	Y int32
-	W int32
-	H int32
+	button *button
 
 	checkbox *sdl.Texture
 	self     <-chan bool
@@ -18,30 +15,30 @@ type windowedButton struct {
 	selected bool
 }
 
-func (wb *windowedButton) Run(ctx context.Context, m *gamekit.Mouse) {
-	posS := m.Position.Subscribe()
-	clickS := m.LeftButtonState.Subscribe()
-	defer posS.Close()
-	defer clickS.Close()
+func newWindowedButton(r *sdl.Rect, t *sdl.Texture) *windowedButton {
+	return &windowedButton{
+		button:   newButton(r, nil),
+		checkbox: t,
+	}
+}
 
-	hovering := false
+func (wb *windowedButton) Run(ctx context.Context, m *gamekit.Mouse) {
+	clickSub := wb.button.Clicked.Subscribe()
+	defer clickSub.Close()
+
+	go wb.button.Run(ctx, m)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case pos := <-posS.C:
-			x := pos.L
-			y := pos.R
-			hovering = x > wb.X && y > wb.Y && x < wb.X+wb.W && y < wb.Y+wb.H
 		case s, more := <-wb.self:
 			if !more {
 				return
 			}
 			wb.selected = s
-		case leftClick := <-clickS.C:
-			if hovering && leftClick {
-
+		case clicked := <-clickSub.C:
+			if clicked {
 				// mark self as selected
 				wb.selected = true
 
@@ -56,10 +53,12 @@ func (wb *windowedButton) Run(ctx context.Context, m *gamekit.Mouse) {
 
 func (wb *windowedButton) Render(r *sdl.Renderer) {
 
+	wb.button.Render(r)
+
 	if wb.selected {
+		p := wb.button
 		r.Copy(wb.checkbox, nil, &sdl.Rect{
-			X: 107*2 + wb.X, Y: 9*2 + wb.Y, W: 9 * 2, H: 9 * 2,
+			X: 107*2 + p.X, Y: 9*2 + p.Y, W: 9 * 2, H: 9 * 2,
 		})
 	}
-
 }

@@ -20,8 +20,15 @@ func (tg *toggleGroup) Run(ctx context.Context, checkbox *sdl.Texture, m *gameki
 	defer close(wbSelf)
 	defer close(fbSelf)
 
-	tg.wb = &windowedButton{3 * 2, 3 * 2, 123 * 2, 27 * 2, checkbox, wbSelf, []chan<- bool{fbSelf}, true}
-	tg.fb = &fullscreenButton{3 * 2, 35 * 2, 123 * 2, 27 * 2, checkbox, fbSelf, []chan<- bool{wbSelf}, false}
+	tg.wb = newWindowedButton(&sdl.Rect{X: 3 * 2, Y: 3 * 2, W: 123 * 2, H: 27 * 2}, checkbox)
+	tg.wb.self = wbSelf
+	tg.wb.others = []chan<- bool{fbSelf}
+	tg.wb.selected = true
+
+	tg.fb = newFullscreenButton(&sdl.Rect{X: 3 * 2, Y: 35 * 2, W: 123 * 2, H: 27 * 2}, checkbox)
+	tg.fb.self = fbSelf
+	tg.fb.others = []chan<- bool{wbSelf}
+	tg.fb.selected = false
 
 	go tg.wb.Run(ctx, m)
 	go tg.fb.Run(ctx, m)
