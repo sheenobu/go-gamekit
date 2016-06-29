@@ -54,10 +54,10 @@ func runLauncher() (res launchResults) {
 	}
 
 	// run the interactive elements
-	cb := &closeButton{133 * 2, 49 * 2, 53 * 2, 13 * 2, cancel}
+	cb := &button{133 * 2, 49 * 2, 53 * 2, 13 * 2, cancel}
 	go cb.Run(ctx, win.Mouse)
 
-	lb := &launchButton{192 * 2, 49 * 2, 53 * 2, 13 * 2, launchOn}
+	lb := &button{192 * 2, 49 * 2, 53 * 2, 13 * 2, launchOn}
 	go lb.Run(ctx, win.Mouse)
 
 	tg := &toggleGroup{}

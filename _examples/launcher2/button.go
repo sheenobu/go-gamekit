@@ -5,16 +5,16 @@ import (
 	"golang.org/x/net/context"
 )
 
-type closeButton struct {
+type button struct {
 	X int32
 	Y int32
 	W int32
 	H int32
 
-	Close func()
+	Click func()
 }
 
-func (cb *closeButton) Run(ctx context.Context, m *gamekit.Mouse) {
+func (b *button) Run(ctx context.Context, m *gamekit.Mouse) {
 	posS := m.Position.Subscribe()
 	clickS := m.LeftButtonState.Subscribe()
 	defer posS.Close()
@@ -29,10 +29,10 @@ func (cb *closeButton) Run(ctx context.Context, m *gamekit.Mouse) {
 		case pos := <-posS.C:
 			x := pos.L
 			y := pos.R
-			hovering = x > cb.X && y > cb.Y && x < cb.X+cb.W && y < cb.Y+cb.H
+			hovering = x > b.X && y > b.Y && x < b.X+b.W && y < b.Y+b.H
 		case leftClick := <-clickS.C:
 			if hovering && leftClick {
-				cb.Close()
+				b.Click()
 			}
 		}
 	}
