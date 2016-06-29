@@ -4,7 +4,6 @@ import (
 	"github.com/sheenobu/go-gamekit"
 	"github.com/sheenobu/go-gamekit/loop"
 	"github.com/veandco/go-sdl2/sdl"
-	"github.com/veandco/go-sdl2/sdl_image"
 	"golang.org/x/net/context"
 )
 
@@ -19,14 +18,8 @@ func runLauncher() (res launchResults) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// load the launch assets
-	sfc, err := img.Load("./data/zd-launch.png")
-	if err != nil {
-		panic(err)
-	}
-	winW := int(sfc.W * 2)
-	winH := int(sfc.H * 2)
-	sfc.Free()
+	winW := 247 * 2
+	winH := 65 * 2
 
 	// build the launcher window
 	wm := gamekit.NewWindowManager()
@@ -35,29 +28,29 @@ func runLauncher() (res launchResults) {
 		panic(err)
 	}
 
-	// load the launcher texture
-	launchTexture, err := img.LoadTexture(win.Renderer, "./data/zd-launch.png")
-	if err != nil {
-		panic(err)
-	}
+	// load the sprite sheet
+	launcherSheet := newSheet(win.Renderer, "./data/launcher_sheet.png")
 
-	// load the checkobx texture
-	checkbox, err := img.LoadTexture(win.Renderer, "./data/checkbox.png")
-	if err != nil {
-		panic(err)
-	}
+	windowedButtonID := launcherSheet.Add(&sdl.Rect{X: 0, Y: 3, W: 123, H: 27})
+	fullscreenButtonID := launcherSheet.Add(&sdl.Rect{X: 0, Y: 35, W: 123, H: 27})
+	scrollRegionID := launcherSheet.Add(&sdl.Rect{X: 130, Y: 3, W: 112, H: 43})
+	closeButtonID := launcherSheet.Add(&sdl.Rect{X: 130, Y: 49, W: 53, H: 13})
+	launchButtonID := launcherSheet.Add(&sdl.Rect{X: 189, Y: 49, W: 53, H: 13})
+	checkboxID := launcherSheet.Add(&sdl.Rect{X: 247, Y: 0, W: 9, H: 9})
+	arrowUpID := launcherSheet.Add(&sdl.Rect{X: 247, Y: 10, W: 9, H: 7})
+	arrowDownID := launcherSheet.Add(&sdl.Rect{X: 247, Y: 18, W: 9, H: 7})
 
 	// run the interactive elements
-	cb := newButton(&sdl.Rect{X: 133 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, nil)
+	cb := newButton(&sdl.Rect{X: 133 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, launcherSheet, closeButtonID)
 	go cb.Run(ctx, win.Mouse)
 
-	lb := newButton(&sdl.Rect{X: 192 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, nil)
+	lb := newButton(&sdl.Rect{X: 192 * 2, Y: 49 * 2, W: 53 * 2, H: 13 * 2}, launcherSheet, launchButtonID)
 	go lb.Run(ctx, win.Mouse)
 
-	tg := &toggleGroup{}
-	go tg.Run(ctx, checkbox, win.Mouse)
+	tg := newToggleGroup(launcherSheet, windowedButtonID, fullscreenButtonID, checkboxID)
+	go tg.Run(ctx, win.Mouse)
 
-	rp := newResolutionPicker(sdl.Rect{X: 134 * 2, Y: 4 * 2, W: 100 * 2, H: 41 * 2}, win.Renderer)
+	rp := newResolutionPicker(sdl.Rect{X: 133 * 2, Y: 3 * 2, W: 100 * 2, H: 41 * 2}, win.Renderer, launcherSheet, scrollRegionID, arrowUpID, arrowDownID)
 	go rp.Run(ctx, win.Mouse, &res)
 
 	go func() {
@@ -89,10 +82,8 @@ func runLauncher() (res launchResults) {
 
 	// build and run the simple game loop
 	loop.Simple(wm, ctx, func() {
-		win.Renderer.SetDrawColor(128, 128, 128, 255)
+		win.Renderer.SetDrawColor(0, 0, 0, 255)
 		win.Renderer.Clear()
-
-		win.Renderer.Copy(launchTexture, nil, &sdl.Rect{X: 0, Y: 0, W: int32(winW), H: int32(winH)})
 
 		cb.Render(win.Renderer)
 		lb.Render(win.Renderer)

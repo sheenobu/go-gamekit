@@ -5,7 +5,6 @@ import (
 
 	"github.com/sheenobu/go-gamekit"
 	"github.com/veandco/go-sdl2/sdl"
-	"github.com/veandco/go-sdl2/sdl_image"
 	"github.com/veandco/go-sdl2/sdl_ttf"
 	"golang.org/x/net/context"
 )
@@ -15,11 +14,9 @@ type resolutionPicker struct {
 	bounds      sdl.Rect
 	resolutions []sdl.DisplayMode
 
+	scrollRegion    *sprite
 	arrowUpButton   *button
 	arrowDownButton *button
-
-	arrowUp   *sdl.Texture
-	arrowDown *sdl.Texture
 
 	scrollPosition int32
 	scrollMax      int32
@@ -30,10 +27,12 @@ type resolutionPicker struct {
 	selected int32
 }
 
-func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer) *resolutionPicker {
+func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer, sheet *sheet, scrollID int, arrowUpID int, arrowDownID int) *resolutionPicker {
 
 	rs := &resolutionPicker{}
 	rs.bounds = bounds
+
+	rs.scrollRegion = newSprite(bounds, sheet, scrollID)
 
 	// load font
 	f, err := ttf.OpenFont("./data/font.ttf", 15)
@@ -42,18 +41,6 @@ func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer) *resolutionPicker {
 	}
 
 	rs.font = f
-
-	// load arrow up texture
-	rs.arrowUp, err = img.LoadTexture(r, "./data/arrow_up.png")
-	if err != nil {
-		panic(err)
-	}
-
-	// load arrow down texture
-	rs.arrowDown, err = img.LoadTexture(r, "./data/arrow_down.png")
-	if err != nil {
-		panic(err)
-	}
 
 	// enumerate the native machine modes
 
@@ -109,7 +96,7 @@ func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer) *resolutionPicker {
 	rs.offscreenHeight = actualHeight
 
 	rs.offscreenTexture, err = r.CreateTexture(sdl.PIXELFORMAT_RGBA8888, sdl.TEXTUREACCESS_TARGET,
-		int(bounds.W), int(rs.offscreenHeight))
+		int(bounds.W-1), int(rs.offscreenHeight))
 
 	if err != nil {
 		panic(err)
@@ -145,8 +132,8 @@ func newResolutionPicker(bounds sdl.Rect, r *sdl.Renderer) *resolutionPicker {
 	rs.selected = 3
 
 	// create the scroll buttons
-	rs.arrowUpButton = newButton(&sdl.Rect{X: 235 * 2, Y: 4 * 2, W: 9 * 2, H: 7 * 2}, rs.arrowUp)
-	rs.arrowDownButton = newButton(&sdl.Rect{X: 235 * 2, Y: 38 * 2, W: 9 * 2, H: 7 * 2}, rs.arrowDown)
+	rs.arrowUpButton = newButton(&sdl.Rect{X: 235 * 2, Y: 4 * 2, W: 9 * 2, H: 7 * 2}, sheet, arrowUpID)
+	rs.arrowDownButton = newButton(&sdl.Rect{X: 235 * 2, Y: 38 * 2, W: 9 * 2, H: 7 * 2}, sheet, arrowDownID)
 
 	return rs
 }
@@ -183,14 +170,17 @@ func (rs *resolutionPicker) Run(ctx context.Context, m *gamekit.Mouse, res *laun
 }
 
 func (rs *resolutionPicker) Render(r *sdl.Renderer) {
-	r.Copy(rs.offscreenTexture, &sdl.Rect{X: 0, Y: rs.scrollPosition * 20, W: rs.bounds.W, H: rs.bounds.H}, &rs.bounds)
+	rs.scrollRegion.Render(r)
+
+	r.Copy(rs.offscreenTexture, &sdl.Rect{X: 0, Y: rs.scrollPosition * 20, W: rs.bounds.W - 1, H: rs.bounds.H - 1}, &sdl.Rect{
+		X: rs.bounds.X + 2, Y: rs.bounds.Y + 2, W: rs.bounds.W - 2, H: rs.bounds.H - 2})
 
 	rs.arrowUpButton.Render(r)
 	rs.arrowDownButton.Render(r)
 
 	if rs.selected >= rs.scrollPosition {
 		r.SetDrawColor(255, 255, 255, 255)
-		r.DrawRect(&sdl.Rect{X: rs.bounds.X, Y: rs.bounds.Y + 20*(rs.selected-rs.scrollPosition), W: rs.bounds.W, H: 20})
+		r.DrawRect(&sdl.Rect{X: rs.bounds.X + 2, Y: 2 + rs.bounds.Y + 20*(rs.selected-rs.scrollPosition), W: rs.bounds.W - 2, H: 20})
 	}
 
 	scrollPos := float64(rs.scrollPosition) / float64(rs.scrollMax)

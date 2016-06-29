@@ -7,13 +7,9 @@ import (
 	"golang.org/x/net/context"
 )
 
-func newButton(r *sdl.Rect, t *sdl.Texture) *button {
+func newButton(r *sdl.Rect, sheet *sheet, textureID int) *button {
 	return &button{
-		X:             r.X,
-		Y:             r.Y,
-		W:             r.W,
-		H:             r.H,
-		T:             t,
+		sprite:        newSprite(*r, sheet, textureID),
 		Clicked:       rx.NewBool(false),
 		clickedState:  false,
 		hoveringState: false,
@@ -21,12 +17,7 @@ func newButton(r *sdl.Rect, t *sdl.Texture) *button {
 }
 
 type button struct {
-	X int32
-	Y int32
-	W int32
-	H int32
-
-	T *sdl.Texture
+	sprite *sprite
 
 	Clicked *rx.Bool
 
@@ -48,7 +39,8 @@ func (b *button) Run(ctx context.Context, m *gamekit.Mouse) {
 		case pos := <-posS.C:
 			x := pos.L
 			y := pos.R
-			b.hoveringState = x > b.X && y > b.Y && x < b.X+b.W && y < b.Y+b.H
+			p := b.sprite.position
+			b.hoveringState = x > p.X && y > p.Y && x < p.X+p.W && y < p.Y+p.H
 		case leftClick := <-clickS.C:
 			if b.hoveringState && leftClick {
 				b.clickedState = true
@@ -62,9 +54,5 @@ func (b *button) Run(ctx context.Context, m *gamekit.Mouse) {
 }
 
 func (b *button) Render(r *sdl.Renderer) {
-	if b.T == nil {
-		return
-	}
-
-	r.Copy(b.T, nil, &sdl.Rect{X: b.X, Y: b.Y, W: b.W, H: b.H})
+	b.sprite.Render(r)
 }

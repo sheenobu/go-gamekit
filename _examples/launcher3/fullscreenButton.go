@@ -7,18 +7,18 @@ import (
 )
 
 type fullscreenButton struct {
-	button *button
+	button   *button
+	checkbox *sprite
 
-	checkbox *sdl.Texture
 	self     <-chan bool
 	others   []chan<- bool
 	selected bool
 }
 
-func newFullscreenButton(r *sdl.Rect, t *sdl.Texture) *fullscreenButton {
+func newFullscreenButton(r *sdl.Rect, sheet *sheet, textureID int, checkboxID int) *fullscreenButton {
 	return &fullscreenButton{
-		button:   newButton(r, nil),
-		checkbox: t,
+		button:   newButton(r, sheet, textureID),
+		checkbox: newSprite(sdl.Rect{X: 107*2 + r.X, Y: 9*2 + r.Y, W: 9 * 2, H: 9 * 2}, sheet, checkboxID),
 	}
 }
 
@@ -56,9 +56,6 @@ func (fb *fullscreenButton) Render(r *sdl.Renderer) {
 	fb.button.Render(r)
 
 	if fb.selected {
-		p := fb.button
-		r.Copy(fb.checkbox, nil, &sdl.Rect{
-			X: 107*2 + p.X, Y: 9*2 + p.Y, W: 9 * 2, H: 9 * 2,
-		})
+		fb.checkbox.Render(r)
 	}
 }

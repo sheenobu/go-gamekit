@@ -12,7 +12,16 @@ type toggleGroup struct {
 	fb *fullscreenButton
 }
 
-func (tg *toggleGroup) Run(ctx context.Context, checkbox *sdl.Texture, m *gamekit.Mouse) {
+func newToggleGroup(sheet *sheet, windowedButtonID int, fullscreenButtonID int, checkboxID int) *toggleGroup {
+
+	var tg toggleGroup
+	tg.wb = newWindowedButton(&sdl.Rect{X: 3 * 2, Y: 3 * 2, W: 123 * 2, H: 27 * 2}, sheet, windowedButtonID, checkboxID)
+	tg.fb = newFullscreenButton(&sdl.Rect{X: 3 * 2, Y: 35 * 2, W: 123 * 2, H: 27 * 2}, sheet, fullscreenButtonID, checkboxID)
+
+	return &tg
+}
+
+func (tg *toggleGroup) Run(ctx context.Context, m *gamekit.Mouse) {
 
 	wbSelf := make(chan bool)
 	fbSelf := make(chan bool)
@@ -20,12 +29,10 @@ func (tg *toggleGroup) Run(ctx context.Context, checkbox *sdl.Texture, m *gameki
 	defer close(wbSelf)
 	defer close(fbSelf)
 
-	tg.wb = newWindowedButton(&sdl.Rect{X: 3 * 2, Y: 3 * 2, W: 123 * 2, H: 27 * 2}, checkbox)
 	tg.wb.self = wbSelf
 	tg.wb.others = []chan<- bool{fbSelf}
 	tg.wb.selected = true
 
-	tg.fb = newFullscreenButton(&sdl.Rect{X: 3 * 2, Y: 35 * 2, W: 123 * 2, H: 27 * 2}, checkbox)
 	tg.fb.self = fbSelf
 	tg.fb.others = []chan<- bool{wbSelf}
 	tg.fb.selected = false

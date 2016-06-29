@@ -8,9 +8,10 @@ type sprite struct {
 	sheet    *sheet
 }
 
-func newSprite(pos sdl.Rect, state int) *sprite {
+func newSprite(pos sdl.Rect, sheet *sheet, state int) *sprite {
 	return &sprite{
 		position: pos,
+		sheet:    sheet,
 		state:    state,
 	}
 }
